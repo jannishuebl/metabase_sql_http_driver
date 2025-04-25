@@ -10,31 +10,44 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-release:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      metabase_version: ${{ steps.check.outputs.metabase_version }}
+    steps:
+      - name: Check for new Metabase release
+        id: check
+        run: |
+          set -e
+          LATEST_TAG=$(curl -s https://api.github.com/repos/metabase/metabase/releases/latest | jq -r .tag_name)
+          echo "Latest Metabase tag: $LATEST_TAG"
+
+          DRIVER_TAG_EXISTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/git/refs/tags \
+            | jq -r '.[].ref' | grep -c "refs/tags/${LATEST_TAG}")
+
+          if [ "$DRIVER_TAG_EXISTS" -gt 0 ]; then
+            echo "Driver already built for $LATEST_TAG"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          else
+            echo "New Metabase version found: $LATEST_TAG"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "metabase_version=$LATEST_TAG" >> $GITHUB_OUTPUT
+          fi
   build:
     runs-on: ubuntu-latest
+    needs: check-release
+    if: needs.check-release.outputs.should_build == 'true'
     permissions:
       contents: write
       packages: write
     steps:
-    - name: Check for new Metabase release
-      run: |
-        LATEST_TAG=$(curl -s https://api.github.com/repos/metabase/metabase/releases/latest | jq -r .tag_name)
-
-        echo "Latest Metabase tag: $LATEST_TAG"
-
-        if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
-          echo "Driver already built for $LATEST_TAG"
-          exit 1  # abort workflow
-        else
-          echo "New Metabase version found: $LATEST_TAG"
-          echo "METABASE_VERSION=$LATEST_TAG" >> $GITHUB_ENV
-        fi
-
     - name: Clone Metabase repository
       uses: actions/checkout@v4
       with:
         repository: metabase/metabase
-        ref: ${{ env.METABASE_VERSION }}
+        ref: ${{ needs.check-release.outputs.metabase_version }}
         path: metabase
         
     - name: Checkout driver code
@@ -80,8 +93,8 @@ jobs:
     - name: Create GitHub release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ env.METABASE_VERSION }}
-        name: Release for Metabase Version ${{ env.METABASE_VERSION }}
+        tag_name: ${{ needs.check-release.outputs.metabase_version }}
+        name: Release for Metabase Version ${{ needs.check-release.outputs.metabase_version }}
         files: metabase/resources/modules/sql-http.metabase-driver.jar
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
