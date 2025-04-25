@@ -21,7 +21,7 @@ jobs:
     - name: Checkout driver code
       uses: actions/checkout@v4
       with:
-        path: metabase/modules/drivers/sql_http
+        path: metabase/modules/drivers/sql-http
         
     - name: Set up JDK 21
       uses: actions/setup-java@v4
