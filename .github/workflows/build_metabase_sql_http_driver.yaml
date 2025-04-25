@@ -81,7 +81,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.METABASE_VERSION }}
-        name: Release ${{ env.METABASE_VERSION }}
+        name: Release for Metabase Version ${{ env.METABASE_VERSION }}
         files: metabase/resources/modules/sql-http.metabase-driver.jar
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
