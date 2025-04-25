@@ -8,5 +8,5 @@ index 98f65a210d..e0c8da9d68 100644
    metabase/starburst          {:local/root "starburst"}
 -  metabase/vertica            {:local/root "vertica"}}}
 +  metabase/vertica            {:local/root "vertica"}
-+  metabase/duckdb             {:local/root "duckdb"}
++  metabase/sql_http           {:local/root "sql_http"}
 +  }}
