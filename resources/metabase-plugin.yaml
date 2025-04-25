@@ -1,0 +1,51 @@
+info:
+  name: Metabase SQL-HTTP Driver
+  version: 0.0.1
+  description: Allows Metabase to connect to API via HTTP.
+contact-info:
+  name: Jannis Hübl
+  address: contact@ifthenjannis.run
+driver:
+  - name: sql-http
+    display-name: SQL-HTTP
+    lazy-load: true
+    parent: sql
+    connection-properties:
+      - name: url
+        display-name: URL
+        placeholder: "https://localhost:3000/query"
+        required: true
+      - name: method
+        display-name: Method
+        default: "POST"
+        placeholder: "POST"
+        required: true
+      - name: custom_headers
+        display-name: Custom HTTP Headers
+        type: text
+        placeholder: "{\n  \"Content-Type\": \"application/json\"\n}"
+        default: "{}"
+        required: true
+        description: 'Add Headers via a JSON-Syntax'
+  - name: duckdb-http
+    display-name: DuckDB-HTTP
+    lazy-load: true
+    parent: sql-http
+    connection-properties:
+      - name: url
+        display-name: URL
+        placeholder: "https://localhost:3000/query"
+        required: true
+      - name: custom_headers
+        display-name: Custom HTTP Headers
+        type: text
+        placeholder: "{\n  \"Content-Type\": \"application/json\"\n}"
+        default: "{}"
+        required: true
+        description: 'Add Headers via a JSON-Syntax'
+  
+init:
+  - step: load-namespace
+    namespace: metabase.driver.sql-http
+  - step: load-namespace
+    namespace: metabase.driver.duckdb-http

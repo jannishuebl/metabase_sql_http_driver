@@ -1,0 +1,60 @@
+name: Build Metabase SQL-HTTP Driver
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Clone Metabase repository
+      uses: actions/checkout@v4
+      with:
+        repository: metabase/metabase
+        path: metabase
+        
+    - name: Checkout driver code
+      uses: actions/checkout@v4
+      with:
+        path: metabase/modules/drivers/sql_http
+        
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        
+    - name: Install Yarn 1.x
+      run: |
+        npm install -g yarn@1
+        yarn --version
+        
+    - name: Set up Clojure
+      uses: DeLaGuardo/setup-clojure@12.3
+      with:
+        cli: latest
+        
+    - name: Build driver
+      working-directory: ./metabase
+      run: |
+        git apply ./modules/drivers/sql_http/ci/metabase_drivers_deps.patch
+        chmod +x ./bin/build-driver.sh
+        ./bin/build-driver.sh sql-http
+        
+    - name: Upload driver artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: metabase-sql-http-driver
+        path: metabase/resources/modules/sql-http.metabase-driver.jar
+        if-no-files-found: error
+        
