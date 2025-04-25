@@ -19,7 +19,6 @@ jobs:
       - name: Check for new Metabase release
         id: check
         run: |
-          set -e
           LATEST_TAG=$(curl -s https://api.github.com/repos/metabase/metabase/releases/latest | jq -r .tag_name)
           echo "Latest Metabase tag: $LATEST_TAG"
 
