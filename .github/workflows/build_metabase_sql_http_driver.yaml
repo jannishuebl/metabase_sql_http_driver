@@ -19,9 +19,10 @@ jobs:
       - name: Check for new Metabase release
         id: check
         run: |
+          set +e
           LATEST_TAG=$(curl -s https://api.github.com/repos/metabase/metabase/releases/latest | jq -r .tag_name)
           echo "Latest Metabase tag: $LATEST_TAG"
-          DRIVER_TAG_EXISTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/git/refs/tags | jq -r '.[].ref' | grep -c "refs/tags/${LATEST_TAG}")
+          DRIVER_TAG_EXISTS=$(curl -s https://api.github.com/repos/${{ github.repository }}/git/refs/tags | jq -r '.[].ref' | grep -c "refs/tags/${LATEST_TAG}")
           if [ "$DRIVER_TAG_EXISTS" -gt 0 ]; then
             echo "Driver already built for $LATEST_TAG"
             echo "should_build=false" >> $GITHUB_OUTPUT
@@ -30,6 +31,7 @@ jobs:
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "metabase_version=$LATEST_TAG" >> $GITHUB_OUTPUT
           fi
+          set -e
   build:
     runs-on: ubuntu-latest
     needs: check-release
