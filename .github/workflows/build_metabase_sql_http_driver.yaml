@@ -1,6 +1,8 @@
 name: Build Metabase SQL-HTTP Driver
 
 on:
+  schedule:
+    - cron: '0 6 * * *'
   push:
     branches: [ main ]
   pull_request:
@@ -12,10 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Check for new Metabase release
+      run: ./metabase/modules/drivers/sql-http/ci/check-latest-metabase-release.sh
     - name: Clone Metabase repository
       uses: actions/checkout@v4
       with:
         repository: metabase/metabase
+        ref: ${{ env.METABASE_VERSION }}
         path: metabase
         
     - name: Checkout driver code
@@ -58,3 +63,10 @@ jobs:
         path: metabase/resources/modules/sql-http.metabase-driver.jar
         if-no-files-found: error
         
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ env.METABASE_VERSION }}
+        name: Release ${{ env.METABASE_VERSION }}
+        files: metabase/resources/modules/sql-http.metabase-driver.jar
+
